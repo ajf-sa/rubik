@@ -1,0 +1,22 @@
+version: '3.6'
+
+
+services:
+  nginx:
+        container_name: nginx01
+        restart: always
+        build:
+          context: ./
+          dockerfile: Dockerfile
+        # volumes:
+        #   - /etc/letsencrypt:/etc/letsencrypt
+        ports:
+          - 80:80
+          - 443:443
+        networks:
+          - default
+volumes:
+  pgdata:
+  
+networks: 
+  default:

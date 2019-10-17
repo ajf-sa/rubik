@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>روبك الابدع</title>
+  <link href='http://fonts.googleapis.com/css?family=Alegreya+Sans+SC' rel='stylesheet' type='text/css'>
+  <link href="style.css" rel="stylesheet">
+  <style>
+    #scene {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+
+      background-size: cover;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="controls">
+    <div><a href="#solve" id="button-solve">حل اللغز</a></div>
+  </div>
+
+  <div id="scene"></div>
+
+
+
+  <script src="lib/jquery-2.0.3.js"></script>
+  <script src="lib/three.js"></script>
+  <script src="lib/OrbitControls.js"></script>
+  <script src='lib/threex.domevent.js'></script>
+  <script src='lib/threex.domevent.object3d.js'></script>
+
+  <script src="rubik.js"></script>
+  <script>
+    setTimeout(function () {
+      document.getElementById('controls').style.display = "block !importan";
+
+    }, 800);
+    $(function () {
+
+
+      function init(dimensions) {
+        dimensions = +(dimensions) || 3;
+
+        var element = $("#scene").empty();
+        var rubik = new Rubik(element, dimensions, "white");
+
+        $(window).on('load', function (e) {
+          e.preventDefault();
+          rubik.shuffle()
+
+        });
+
+
+        $("#button-solve").on('click', function (e) {
+          e.preventDefault();
+          rubik.solve();
+        });
+        $("#button-undo").on('click', function (e) {
+          e.preventDefault();
+          rubik.undo();
+        });
+        $("#button-reset").on('click', function (e) {
+          e.preventDefault();
+          init();
+        });
+        $("#select-size").on('change', function () {
+          init($(this).val())
+        });
+      };
+
+      init();
+
+
+    });
+  </script>
+
+</body>
+
+</html>

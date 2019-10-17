@@ -7,14 +7,16 @@ function Rubik(element, dimensions, background) {
   background = background || 0x303030;
 
   var width = element.innerWidth(),
-      height = element.innerHeight();
+    height = element.innerHeight();
 
   var debug = false;
 
   /*** three.js boilerplate ***/
   var scene = new THREE.Scene(),
-      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000),
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+    camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000),
+    renderer = new THREE.WebGLRenderer({
+      antialias: true
+    });
 
   renderer.setClearColor(background, 1.0);
   renderer.setSize(width, height);
@@ -40,9 +42,9 @@ function Rubik(element, dimensions, background) {
     orbitControl.noRotate = true;
   }
 
-  /*** Debug aids ***/  
-  if(debug) {
-    scene.add(new THREE.AxisHelper( 20 ));
+  /*** Debug aids ***/
+  if (debug) {
+    scene.add(new THREE.AxisHelper(20));
   }
 
   /*** Click handling ***/
@@ -52,14 +54,14 @@ function Rubik(element, dimensions, background) {
   var SCREEN_WIDTH = window.innerWidth;
 
   var raycaster = new THREE.Raycaster(),
-      projector = new THREE.Projector();
+    projector = new THREE.Projector();
 
   function isMouseOverCube(mouseX, mouseY) {
     var directionVector = new THREE.Vector3();
 
     //Normalise mouse x and y
-    var x = ( mouseX / SCREEN_WIDTH ) * 2 - 1;
-    var y = -( mouseY / SCREEN_HEIGHT ) * 2 + 1;
+    var x = (mouseX / SCREEN_WIDTH) * 2 - 1;
+    var y = -(mouseY / SCREEN_HEIGHT) * 2 + 1;
 
     directionVector.set(x, y, 1);
 
@@ -74,12 +76,12 @@ function Rubik(element, dimensions, background) {
   //Return the axis which has the greatest maginitude for the vector v
   function principalComponent(v) {
     var maxAxis = 'x',
-        max = Math.abs(v.x);
-    if(Math.abs(v.y) > max) {
+      max = Math.abs(v.x);
+    if (Math.abs(v.y) > max) {
       maxAxis = 'y';
       max = Math.abs(v.y);
     }
-    if(Math.abs(v.z) > max) {
+    if (Math.abs(v.z) > max) {
       maxAxis = 'z';
       max = Math.abs(v.z);
     }
@@ -95,24 +97,24 @@ function Rubik(element, dimensions, background) {
   // valid movements that end outside of the Rubik's cube
   var lastCube;
 
-  var onCubeMouseDown = function(e, cube) {
+  var onCubeMouseDown = function (e, cube) {
     disableCameraControl();
 
     //Maybe add move check in here
-    if(true || !isMoving) {
+    if (true || !isMoving) {
       clickVector = cube.rubikPosition.clone();
-      
+
       var centroid = e.targetFace.centroid.clone();
       centroid.applyMatrix4(cube.matrixWorld);
 
       //Which face (of the overall cube) did we click on?
-      if(nearlyEqual(Math.abs(centroid.x), maxExtent))
+      if (nearlyEqual(Math.abs(centroid.x), maxExtent))
         clickFace = 'x';
-      else if(nearlyEqual(Math.abs(centroid.y), maxExtent))
+      else if (nearlyEqual(Math.abs(centroid.y), maxExtent))
         clickFace = 'y';
-      else if(nearlyEqual(Math.abs(centroid.z), maxExtent))
-        clickFace = 'z';    
-    }  
+      else if (nearlyEqual(Math.abs(centroid.z), maxExtent))
+        clickFace = 'z';
+    }
   };
 
   //Matrix of the axis that we should rotate for 
@@ -123,21 +125,30 @@ function Rubik(element, dimensions, background) {
   // a  Y Z - X
   // g  Z Y X -
   var transitions = {
-    'x': {'y': 'z', 'z': 'y'},
-    'y': {'x': 'z', 'z': 'x'},
-    'z': {'x': 'y', 'y': 'x'}
+    'x': {
+      'y': 'z',
+      'z': 'y'
+    },
+    'y': {
+      'x': 'z',
+      'z': 'x'
+    },
+    'z': {
+      'x': 'y',
+      'y': 'x'
+    }
   }
 
-  var onCubeMouseUp = function(e, cube) {
+  var onCubeMouseUp = function (e, cube) {
 
-    if(clickVector) {
+    if (clickVector) {
       //TODO: use the actual mouse end coordinates for finer drag control
       var dragVector = cube.rubikPosition.clone();
       dragVector.sub(clickVector);
 
       //Don't move if the "drag" was too small, to allow for 
       // click-and-change-mind.
-      if(dragVector.length() > cubeSize) {
+      if (dragVector.length() > cubeSize) {
 
         //Rotate with the most significant component of the drag vector
         // (excluding the current axis, because we can't rotate that way)
@@ -147,18 +158,18 @@ function Rubik(element, dimensions, background) {
         var maxAxis = principalComponent(dragVectorOtherAxes);
 
         var rotateAxis = transitions[clickFace][maxAxis],
-            direction = dragVector[maxAxis] >= 0 ? 1 : -1;
-        
+          direction = dragVector[maxAxis] >= 0 ? 1 : -1;
+
         //Reverse direction of some rotations for intuitive control
         //TODO: find a general solution!
-        if(clickFace == 'z' && rotateAxis == 'x' || 
-           clickFace == 'x' && rotateAxis == 'z' ||
-           clickFace == 'y' && rotateAxis == 'z')
+        if (clickFace == 'z' && rotateAxis == 'x' ||
+          clickFace == 'x' && rotateAxis == 'z' ||
+          clickFace == 'y' && rotateAxis == 'z')
           direction *= -1;
 
-        if(clickFace == 'x' && clickVector.x > 0 ||
-           clickFace == 'y' && clickVector.y < 0 ||
-           clickFace == 'z' && clickVector.z < 0)
+        if (clickFace == 'x' && clickVector.x > 0 ||
+          clickFace == 'y' && clickVector.y < 0 ||
+          clickFace == 'z' && clickVector.z < 0)
           direction *= -1;
 
         pushMove(cube, clickVector.clone(), rotateAxis, direction);
@@ -172,16 +183,16 @@ function Rubik(element, dimensions, background) {
 
   //If the mouse was released outside of the Rubik's cube, use the cube that the mouse 
   // was last over to determine which move to make
-  var onCubeMouseOut = function(e, cube) {
+  var onCubeMouseOut = function (e, cube) {
     //TODO: there is a possibility that, at some rotations, we may catch unintentional
     // cubes on the way out. We should check that the selected cube is on the current
     // drag vector.
     lastCube = cube;
   }
 
-  element.on('mouseup', function(e) {
-    if(!isMouseOverCube(e.clientX, e.clientY)) {
-      if(lastCube)
+  element.on('mouseup', function (e) {
+    if (!isMouseOverCube(e.clientX, e.clientY)) {
+      if (lastCube)
         onCubeMouseUp(e, lastCube);
     }
   });
@@ -189,18 +200,21 @@ function Rubik(element, dimensions, background) {
   /*** Build 27 cubes ***/
   //TODO: colour the insides of all of the faces black
   // (probably colour all faces black to begin with, then "whitelist" exterior faces)
-  var colours = [0xC41E3A, 0x009E60, 0x0051BA, 0xFF5800, 0xFFD500, 0xFFFFFF],
-      faceMaterials = colours.map(function(c) {
-        return new THREE.MeshLambertMaterial({ color: c , ambient: c });
-      }),
-      cubeMaterials = new THREE.MeshFaceMaterial(faceMaterials);
+  var colours = [0xEDB40E, 0x009E60, 0x0051BA, 0xFF5800, 0xFFD500, 0xFFFCCC],
+    faceMaterials = colours.map(function (c) {
+      return new THREE.MeshLambertMaterial({
+        color: c,
+        ambient: c
+      });
+    }),
+    cubeMaterials = new THREE.MeshFaceMaterial(faceMaterials);
 
-  var cubeSize = 3,
-      spacing = 0.5;
+  var cubeSize = 1.9,
+    spacing = 0.3;
 
   var increment = cubeSize + spacing,
-      maxExtent = (cubeSize * dimensions + spacing * (dimensions - 1)) / 2, 
-      allCubes = [];
+    maxExtent = (cubeSize * dimensions + spacing * (dimensions - 1)) / 2,
+    allCubes = [];
 
   function newCube(x, y, z) {
     var cubeGeometry = new THREE.CubeGeometry(cubeSize, cubeSize, cubeSize);
@@ -210,15 +224,23 @@ function Rubik(element, dimensions, background) {
     cube.position = new THREE.Vector3(x, y, z);
     cube.rubikPosition = cube.position.clone();
 
-    cube.on('mousedown', function(e) {
+    cube.on('mousedown', function (e) {
       onCubeMouseDown(e, cube);
     });
 
-    cube.on('mouseup', function(e) {
+    cube.on('touchstart', function (e) {
+      onCubeMouseDown(e, cube);
+    });
+
+    cube.on('mouseup', function (e) {
       onCubeMouseUp(e, cube);
     });
 
-    cube.on('mouseout', function(e) {
+    cube.on('touchend', function (e) {
+      onCubeMouseUp(e, cube);
+    });
+
+    cube.on('mouseout', function (e) {
       onCubeMouseOut(e, cube);
     });
 
@@ -227,13 +249,13 @@ function Rubik(element, dimensions, background) {
   }
 
   var positionOffset = (dimensions - 1) / 2;
-  for(var i = 0; i < dimensions; i ++) {
-    for(var j = 0; j < dimensions; j ++) {
-      for(var k = 0; k < dimensions; k ++) {
+  for (var i = 0; i < dimensions; i++) {
+    for (var j = 0; j < dimensions; j++) {
+      for (var k = 0; k < dimensions; k++) {
 
         var x = (i - positionOffset) * increment,
-            y = (j - positionOffset) * increment,
-            z = (k - positionOffset) * increment;
+          y = (j - positionOffset) * increment,
+          z = (k - positionOffset) * increment;
 
         newCube(x, y, z);
       }
@@ -250,17 +272,17 @@ function Rubik(element, dimensions, background) {
 
   //Maintain a queue of moves so we can perform compound actions like shuffle and solve
   var moveQueue = [],
-      completedMoveStack = [],
-      currentMove;
+    completedMoveStack = [],
+    currentMove;
 
   //Are we in the middle of a transition?
   var isMoving = false,
-      moveAxis, moveN, moveDirection,
-      rotationSpeed = 0.2;
+    moveAxis, moveN, moveDirection,
+    rotationSpeed = 0.2;
 
   //http://stackoverflow.com/questions/20089098/three-js-adding-and-removing-children-of-rotated-objects
   var pivot = new THREE.Object3D(),
-      activeGroup = [];
+    activeGroup = [];
 
   function nearlyEqual(a, b, d) {
     d = d || 0.001;
@@ -270,11 +292,11 @@ function Rubik(element, dimensions, background) {
   //Select the plane of cubes that aligns with clickVector
   // on the given axis
   function setActiveGroup(axis) {
-    if(clickVector) {
+    if (clickVector) {
       activeGroup = [];
 
-      allCubes.forEach(function(cube) {
-        if(nearlyEqual(cube.rubikPosition[axis], clickVector[axis])) { 
+      allCubes.forEach(function (cube) {
+        if (nearlyEqual(cube.rubikPosition[axis], clickVector[axis])) {
           activeGroup.push(cube);
         }
       });
@@ -283,33 +305,38 @@ function Rubik(element, dimensions, background) {
     }
   }
 
-  var pushMove = function(cube, clickVector, axis, direction) {
-    moveQueue.push({ cube: cube, vector: clickVector, axis: axis, direction: direction });
+  var pushMove = function (cube, clickVector, axis, direction) {
+    moveQueue.push({
+      cube: cube,
+      vector: clickVector,
+      axis: axis,
+      direction: direction
+    });
   }
 
-  var startNextMove = function() {
+  var startNextMove = function () {
     var nextMove = moveQueue.pop();
 
-    if(nextMove) {
+    if (nextMove) {
       clickVector = nextMove.vector;
-      
+
       var direction = nextMove.direction || 1,
-          axis = nextMove.axis;
+        axis = nextMove.axis;
 
-      if(clickVector) {
+      if (clickVector) {
 
-        if(!isMoving) {
+        if (!isMoving) {
           isMoving = true;
           moveAxis = axis;
           moveDirection = direction;
 
           setActiveGroup(axis);
 
-          pivot.rotation.set(0,0,0);
+          pivot.rotation.set(0, 0, 0);
           pivot.updateMatrixWorld();
           scene.add(pivot);
 
-          activeGroup.forEach(function(e) {
+          activeGroup.forEach(function (e) {
             THREE.SceneUtils.attach(e, scene, pivot);
           });
 
@@ -327,11 +354,11 @@ function Rubik(element, dimensions, background) {
 
   function doMove() {
     //Move a quarter turn then stop
-    if(pivot.rotation[moveAxis] >= Math.PI / 2) {
+    if (pivot.rotation[moveAxis] >= Math.PI / 2) {
       //Compensate for overshoot. TODO: use a tweening library
       pivot.rotation[moveAxis] = Math.PI / 2;
       moveComplete();
-    } else if(pivot.rotation[moveAxis] <= Math.PI / -2) {
+    } else if (pivot.rotation[moveAxis] <= Math.PI / -2) {
       pivot.rotation[moveAxis] = Math.PI / -2;
       moveComplete()
     } else {
@@ -339,14 +366,14 @@ function Rubik(element, dimensions, background) {
     }
   }
 
-  var moveComplete = function() {
+  var moveComplete = function () {
     isMoving = false;
     moveAxis, moveN, moveDirection = undefined;
     clickVector = undefined;
 
     pivot.updateMatrixWorld();
     scene.remove(pivot);
-    activeGroup.forEach(function(cube) {
+    activeGroup.forEach(function (cube) {
       cube.updateMatrixWorld();
 
       cube.rubikPosition = cube.position.clone();
@@ -369,9 +396,9 @@ function Rubik(element, dimensions, background) {
     //States
     //TODO: generalise to something like "activeState.tick()" - see comments 
     // on encapsulation above
-    if(isMoving) {
+    if (isMoving) {
       doMove();
-    } 
+    }
 
     renderer.render(scene, camera);
     requestAnimationFrame(render);
@@ -387,14 +414,14 @@ function Rubik(element, dimensions, background) {
 
   //Public API
   return {
-    shuffle: function() {
+    shuffle: function () {
       function randomAxis() {
-        return ['x', 'y', 'z'][randomInt(0,2)];
+        return ['x', 'y', 'z'][randomInt(0, 2)];
       }
 
       function randomDirection() {
-        var x = randomInt(0,1);
-        if(x == 0) x = -1;
+        var x = randomInt(0, 1);
+        if (x == 0) x = -1;
         return x;
       }
 
@@ -405,7 +432,7 @@ function Rubik(element, dimensions, background) {
       }
 
       var nMoves = randomInt(10, 40);
-      for(var i = 0; i < nMoves; i ++) {
+      for (var i = 0; i < nMoves; i++) {
         //TODO: don't reselect the same axis?
         var cube = randomCube();
         pushMove(cube, cube.position.clone(), randomAxis(), randomDirection());
@@ -415,17 +442,21 @@ function Rubik(element, dimensions, background) {
     },
 
     //A naive solver - step backwards through all completed steps
-    solve: function() {
-      if(!isMoving) {
-        completedMoveStack.forEach(function(move) {
+    solve: function () {
+      if (!isMoving) {
+        completedMoveStack.forEach(function (move) {
           pushMove(move.cube, move.vector, move.axis, move.direction * -1);
         });
+
 
         //Don't remember the moves we're making whilst solving
         completedMoveStack = [];
 
-        moveEvents.one('deplete', function() {
+        moveEvents.one('deplete', function () {
           completedMoveStack = [];
+          setTimeout(function () {
+            window.location.replace("./inv.html");
+          }, 1500);
         });
 
         startNextMove();
@@ -433,15 +464,15 @@ function Rubik(element, dimensions, background) {
     },
 
     //Rewind the last move
-    undo: function() {
-      if(!isMoving) {
+    undo: function () {
+      if (!isMoving) {
         var lastMove = completedMoveStack.pop();
-        if(lastMove) {
+        if (lastMove) {
           //clone
           var stackToRestore = completedMoveStack.slice(0);
           pushMove(lastMove.cube, lastMove.vector, lastMove.axis, lastMove.direction * -1);
 
-          moveEvents.one('complete', function() {
+          moveEvents.one('complete', function () {
             completedMoveStack = stackToRestore;
           });
 
@@ -451,4 +482,3 @@ function Rubik(element, dimensions, background) {
     }
   }
 }
-
